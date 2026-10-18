@@ -26,7 +26,12 @@ export function AuthScreen() {
       const res = mode === 'login' ? await api.login(username, password) : await api.register(username, password, displayName);
       await signedIn(res.token, res.user);
     } catch (err: any) {
-      setError(err.message);
+      if (err.status === 0 && isDesktop) {
+        setError('Server unreachable. Run: docker compose up -d');
+        setShowServer(true);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setBusy(false);
     }
