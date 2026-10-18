@@ -1,0 +1,41 @@
+# Production-style stack: Postgres + ONEHUB API/web + LiveKit media server.
+# Copy .env.example to .env and fill in every value before `docker compose up -d`.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: onehub
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: onehub
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U onehub"]
+      interval: 5s
+      retries: 10
+
+  livekit:
+    image: livekit/livekit-server:v1.9
+    restart: unless-stopped
+    command: --config /etc/livekit.yaml
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+    volumes: [./deploy/livekit.yaml:/etc/livekit.yaml:ro]
+    network_mode: host # WebRTC needs direct UDP; see deploy/livekit.yaml for ports
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgres://onehub:${POSTGRES_PASSWORD}@db:5432/onehub
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      CORS_ORIGINS: ${PUBLIC_URL},tauri://localhost,http://tauri.localhost
+      LIVEKIT_URL: ${LIVEKIT_PUBLIC_URL}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+    ports: ["4000:4000"]
+
+volumes:
+  pgdata:

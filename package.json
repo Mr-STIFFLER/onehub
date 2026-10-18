@@ -1,0 +1,13 @@
+{
+  "name": "onehub",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev:server": "pnpm --filter @onehub/server dev",
+    "dev:client": "pnpm --filter @onehub/client dev",
+    "build": "pnpm -r build",
+    "test": "pnpm --filter @onehub/server test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "packageManager": "pnpm@10.0.0"
+}
