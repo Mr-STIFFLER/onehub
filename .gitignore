@@ -3,3 +3,4 @@ dist
 .env
 desktop/src-tauri/target
 *.log
+desktop/src-tauri/gen
